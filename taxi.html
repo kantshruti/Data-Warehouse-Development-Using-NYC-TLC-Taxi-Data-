@@ -1,0 +1,38 @@
+import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+import folium
+
+# Load data
+data = pd.DataFrame({
+    'Zone': ['Zone1', 'Zone2', 'Zone3'],  # Replace with actual zone IDs
+    'Trips': [22433066, 23361340, 22673837],  # Total trips
+    'Avg_Distance': [4.89, 5.03, 5.02],       # Average distance
+    'Longitude': [-74.00597, -73.98567, -73.95068],  # Zone longitude
+    'Latitude': [40.71278, 40.75889, 40.78539]       # Zone latitude
+})
+
+# Normalize the features
+scaler = StandardScaler()
+features = scaler.fit_transform(data[['Trips', 'Avg_Distance']])
+
+# Apply K-Means clustering
+kmeans = KMeans(n_clusters=3, random_state=42)
+data['Cluster'] = kmeans.fit_predict(features)
+
+# Visualize on map
+m = folium.Map(location=[40.7128, -74.0060], zoom_start=11)
+
+# Add zones to the map
+for _, row in data.iterrows():
+    folium.CircleMarker(
+        location=[row['Latitude'], row['Longitude']],
+        radius=10,
+        color=f'#{hex(row["Cluster"] * 1000000)[2:]}',  # Generate unique color
+        fill=True,
+        fill_opacity=0.6,
+        popup=f"Zone: {row['Zone']}, Cluster: {row['Cluster']}"
+    ).add_to(m)
+
+# Save and display map
+m.save('cluster_map.html')
